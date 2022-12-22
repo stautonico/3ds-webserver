@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Fleet
 option(TARGET_PLATFORM "TARGET_PLATFORM" LINUX)
 
 # Add shared sources
-set(SHARED_SOURCES src/server/server.cpp)
+set(SHARED_SOURCES src/server/server.cpp src/server/request.cpp)
 
 # Platform specific sources
 if("${TARGET_PLATFORM}" STREQUAL "3DS")

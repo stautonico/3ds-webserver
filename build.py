@@ -19,7 +19,11 @@ def main():
         with open("lastbuild", "r") as f:
             last_build = f.read().strip()
 
+
     if len(sys.argv) > 1:
+        if sys.argv[1].lower() == "clean":
+            os.system("make clean")
+            return
         current_build = sys.argv[1].upper()
     else:
         current_build = "LINUX"

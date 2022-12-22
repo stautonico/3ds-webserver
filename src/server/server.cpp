@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include "request.h"
+
 #include <arpa/inet.h>
 #include <malloc.h>
 #include <netinet/in.h>
