@@ -17,6 +17,7 @@ enum Method {
 
 class Status {
 public:
+  Status() {}; // Used for empty statuses
   Status(int num, std::string description);
 
   int num() { return m_status_num; };
@@ -43,8 +44,10 @@ static std::map<int, Status> statuses = {
     {205, Status(205, std::string("Reset Content"))},
     {206, Status(206, std::string("Partial Content"))},
     {207, Status(207, std::string("Multi-Status"))}, // Not supported (WebDAV)
-    {208, Status(208, std::string("Already Reported"))}, // Not supported (WebDAV)
-    {226, Status(226, std::string("IM Used"))}, // Not supported (HTTP Delta Encoding)
+    {208,
+     Status(208, std::string("Already Reported"))}, // Not supported (WebDAV)
+    {226, Status(226, std::string(
+                          "IM Used"))}, // Not supported (HTTP Delta Encoding)
     // 3XX
     {300, Status(300, std::string("Multiple Choices"))},
     {301, Status(301, std::string("Moved Permanently"))},
@@ -75,21 +78,57 @@ static std::map<int, Status> statuses = {
     {416, Status(416, std::string("Range Not Satisfiable"))},
     {417, Status(417, std::string("Expectation Failed"))},
     {418, Status(418, std::string("I'm a teapot"))},
-
-
-
+    {421, Status(421, std::string("Misdirected Request"))},
+    {422, Status(422, std::string(
+                          "Unprocessable Entity"))}, // Not supported (WebDAV)
+    {423, Status(423, std::string("Locked"))},       // Not supported (WebDAV)
+    {424,
+     Status(424, std::string("Failed Dependency"))}, // Not supported (WebDAV)
+    {425, Status(425, std::string("Too Early"))},
+    {426, Status(426, std::string("Upgrade Required"))},
+    {428, Status(428, std::string("Precondition Required"))},
+    {429, Status(429, std::string("Too Many Requests"))},
+    {431, Status(431, std::string("Request Header Fields Too Large"))},
+    {451, Status(451, std::string("Unavailable For Legal Reasons"))},
+    // 5XX
+    {500, Status(500, std::string("Internal Server Error"))},
+    {501, Status(501, std::string("Not Implemented"))},
+    {502, Status(502, std::string("Bad Gateway"))},
+    {503, Status(503, std::string("Service Unavailable"))},
+    {504, Status(504, std::string("Gateway Timeout"))},
+    {505, Status(505, std::string("HTTP Version Not Supported"))},
+    {506, Status(506, std::string("Variant Also Negotiates"))},
+    {507, Status(507, std::string(
+                          "Insufficient Storage"))}, // Not supported (WebDAV)
+    {510, Status(510, std::string("Not Extended"))},
+    {511, Status(511, std::string("Network Authentication Required"))},
 
 };
 
-
 class Request {
 public:
-  Request();
-  ~Request();
+  Request(Method method, std::string host, std::string path);
+  ~Request() {};
+
+  void set_version(float version) { m_version = version; }
+  void set_body(std::string body) { m_body = body; };
+
+  bool add_header(std::string key, std::string value);
+  bool remove_header(std::string key);
+
+  bool add_query_param(std::string key, std::string value);
+  bool remove_query_param(std::string key);
+
+  static Request from_raw(std::string raw_request);
 
 private:
   Method m_method;
+  std::string m_host;
+  std::string m_path;
+  float m_version;
   std::map<std::string, std::string> m_headers;
+  std::map<std::string, std::string> m_query;
+  std::string m_body;
   Status m_status;
 };
 } // namespace HTTP

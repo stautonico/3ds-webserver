@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <stdexcept>
 
 
 #if IS_3DS
@@ -107,7 +108,13 @@ bool HTTP::Server::run() {
   memset(&buf, 0, 1024);
   auto bytesRead = read(connection, buf, 1024);
 
-  printf("Our read message was: '%s'\n", buf);
+  try {
+    Request r = Request::from_raw(std::string(buf));
+  } catch (const std::exception& e) {
+    printf("We had an execption: %s\n", e.what());
+  }
+
+//  printf("Our read message was: '%s'\n", buf);
 
   send(connection, buf, bytesRead, 0);
 
