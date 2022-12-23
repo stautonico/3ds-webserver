@@ -1,11 +1,15 @@
 #include "request.h"
+#include "../util/string.h"
 
 #include <algorithm>
+#include <exception>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#include <vector>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 HTTP::Status::Status(int num, std::string description) {
   m_status_num = num;
@@ -25,8 +29,9 @@ HTTP::Status::Status(int num, std::string description) {
   }
 }
 
-HTTP::Request::Request(Method method, std::string host, std::string path)
-    : m_method(method), m_host(host), m_path(path) {}
+HTTP::Request::Request() {
+  add_header("Server", "WebServe3DS");
+}
 
 bool HTTP::Request::add_header(std::string key, std::string value) {
   if (m_headers.find(key) == m_headers.end()) {
@@ -44,6 +49,13 @@ bool HTTP::Request::remove_header(std::string key) {
   }
 
   return false;
+}
+
+std::string HTTP::Request::get_header(std::string key) {
+  if (m_headers.find(key) == m_headers.end()) {
+    return std::string();
+  }
+  return m_headers[key];
 }
 
 bool HTTP::Request::add_query_param(std::string key, std::string value) {
@@ -66,29 +78,45 @@ bool HTTP::Request::remove_query_param(std::string key) {
 
 HTTP::Request HTTP::Request::from_raw(std::string raw_request) {
   // TODO: Parse raw http requests
-  std::vector<std::string> lines;
-  std::string token;
-  std::stringstream ss(raw_request);
-
-  while (getline(ss, token, '\n')) {
-    lines.push_back(token);
-  }
-
-//  if (lines.size() < 2) {
-//    throw std::exception("Invalid HTTP request");
-//  }
-
+  auto lines = split(raw_request, '\n');
 
   // We expect exactly 3 arguments in the first line
-  std::vector<std::string> line;
-  std::stringstream line_ss(lines[0]);
+  auto line = split(lines[0], ' ');
 
-  while (getline(line_ss, token, ' ')) {
-    line.push_back(token);
+  if (line.size() != 3) {
+    throw std::runtime_error("Invalid HTTP request");
   }
 
-  printf("Method: %s, path: %s, version: %s\n", line.at(0).c_str(), line.at(1).c_str(), line.at(2).c_str());
+  printf("0: %s, 1: %s, 2: %s\n", line.at(0).c_str(), line.at(1).c_str(),
+         line.at(2).c_str());
 
-  Request r(POST, "", "");
+  Request r;
+  r.set_method(method_from_string(line.at(0)));
+  r.set_path(line.at(1));
+
+  auto split_http_version = split(line.at(2), '/');
+  if (split_http_version.size() != 2 || split_http_version.at(0) != "HTTP") {
+    throw std::runtime_error("Invalid HTTP request");
+  }
+
+  r.set_version(std::stof(split_http_version.at(1)));
+
   return r;
+}
+
+std::string HTTP::Request::to_raw() {
+  std::ostringstream ss;
+
+  ss << std::fixed << std::setprecision(1);
+  ss << "HTTP/" << m_version << " " << m_status.num() << " " << m_status.description()
+     << "\r\n";
+  for (auto const &x : m_headers) {
+    ss << x.first << ": " << x.second << "\r\n";
+  }
+
+  if (!m_body.empty()) {
+    ss << "\r\n" << m_body << "\r\n";
+  }
+
+  return ss.str();
 }

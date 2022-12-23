@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <map>
+#include <stdexcept>
 #include <string>
 
 namespace HTTP {
@@ -15,9 +17,30 @@ enum Method {
   TRACE,
 };
 
+inline Method method_from_string(std::string name) {
+  transform(name.begin(), name.end(), name.begin(), ::toupper);
+  if (name == "CONNECT")
+    return CONNECT;
+  else if (name == "DELETE")
+    return DELETE;
+  else if (name == "GET")
+    return GET;
+  else if (name == "HEAD")
+    return HEAD;
+  else if (name == "OPTIONS")
+    return OPTIONS;
+  else if (name == "POST")
+    return POST;
+  else if (name == "PUT")
+    return PUT;
+  else if (name == "TRACE")
+    return TRACE;
+  throw std::runtime_error("Invalid method");
+}
+
 class Status {
 public:
-  Status() {}; // Used for empty statuses
+  Status(){}; // Used for empty Statuses
   Status(int num, std::string description);
 
   int num() { return m_status_num; };
@@ -29,7 +52,7 @@ private:
   std::string m_class;
 };
 
-static std::map<int, Status> statuses = {
+static std::map<int, Status> Statuses = {
     // 1XX
     {100, Status(100, std::string("Continue"))},
     {101, Status(101, std::string("Switching Protocols"))},
@@ -107,28 +130,63 @@ static std::map<int, Status> statuses = {
 
 class Request {
 public:
-  Request(Method method, std::string host, std::string path);
-  ~Request() {};
+  Request();
+  ~Request(){};
 
+  void set_method(Method method) {m_method = method;};
   void set_version(float version) { m_version = version; }
   void set_body(std::string body) { m_body = body; };
+  void set_path(std::string path) { m_path = path; };
+  void set_status(Status status) { m_status = status; };
 
   bool add_header(std::string key, std::string value);
   bool remove_header(std::string key);
+  std::string get_header(std::string key);
 
   bool add_query_param(std::string key, std::string value);
   bool remove_query_param(std::string key);
 
   static Request from_raw(std::string raw_request);
+  std::string to_raw();
+
+  std::string path() { return m_path; };
 
 private:
   Method m_method;
   std::string m_host;
   std::string m_path;
-  float m_version;
+  float m_version{1.1};
   std::map<std::string, std::string> m_headers;
   std::map<std::string, std::string> m_query;
   std::string m_body;
   Status m_status;
 };
+
+static Request build_304_response() {
+  Request r;
+  r.set_status(Statuses[304]);
+
+  return r;
+}
+
+static Request build_404_response() {
+  Request r;
+  r.set_status(Statuses[404]);
+  r.set_body("<h1>404 Page not found :(</h1>");
+
+  return r;
+}
+
+static Request build_500_response() {
+  Request r;
+  r.set_status(Statuses[500]);
+  r.set_body("<h1>500 Internal server error occurred :(</h1>");
+
+  return r;
+}
+
+static Request NotModified = build_304_response();
+static Request PageNotFoundResponse = build_404_response();
+static Request InternalServerErrorResponse = build_500_response();
+
 } // namespace HTTP
