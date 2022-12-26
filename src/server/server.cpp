@@ -3,7 +3,6 @@
 #include "request.h"
 
 #include <arpa/inet.h>
-#include <ctime>
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
@@ -90,6 +89,7 @@ HTTP::Server::Server() {
 HTTP::Server::~Server() { close(m_sockfd); }
 
 bool HTTP::Server::run() {
+  m_running = true;
   if (listen(m_sockfd, 10) < 0) {
     perror("Failed to listen on socket");
     return false;
@@ -101,11 +101,10 @@ bool HTTP::Server::run() {
 
   auto addrlen = sizeof(sockaddr);
 
-  while (true) {
+  while (m_running) {
     int connection = accept(m_sockfd, (struct sockaddr *)&client, &clientlen);
     if (connection < 0) {
-      perror("Failed to init connection");
-      return false;
+      continue;
     }
 
     printf("Connecting port %d from %s\n", client.sin_port,
@@ -143,9 +142,10 @@ bool HTTP::Server::run() {
       if (!modified_header.empty()) {
         printf("We're checking dates!\n");
         struct tm t = {0};
+#if IS_LINUX
         if (strptime(modified_header.c_str(), "%a, %d %b %G %T %Z", &t) ==
             NULL) {
-          printf("Parse time failed, ignoring cache");
+          printf("Pa]rse time failed, ignoring cache");
         } else {
           time_t if_modified_time = mktime(&t);
           if (if_modified_time > mod_time) {
@@ -153,6 +153,7 @@ bool HTTP::Server::run() {
             send(connection, message.c_str(), message.size(), 0);
           }
         }
+#endif
       } else {
         std::ifstream file("/tmp/webfiles" + r.path());
         if (!file.is_open()) {
@@ -167,8 +168,7 @@ bool HTTP::Server::run() {
           res.set_status(HTTP::Statuses[200]);
           res.set_body(std::string(file_data.begin(), file_data.end()));
 
-
-          std::tm* t = std::gmtime(&mod_time);
+          std::tm *t = std::gmtime(&mod_time);
           std::stringstream ss;
           ss << std::put_time(t, "%a, %d %b %G %T %Z");
           res.add_header("Last-Modified", ss.str());
@@ -177,7 +177,7 @@ bool HTTP::Server::run() {
           content_length_str << file_length;
           res.add_header("Content-Length", content_length_str.str());
 
-          time_t  current_time;
+          time_t current_time;
           time(&current_time);
           std::stringstream current_datetime;
           t = std::gmtime(&current_time);
@@ -188,6 +188,7 @@ bool HTTP::Server::run() {
 
           send(connection, final_res.c_str(), final_res.size(), 0);
           file.close();
+          fcntl(m_sockfd, F_SETFL, fcntl(m_sockfd, F_GETFL, 0) | O_NONBLOCK);
         }
       }
     } catch (const std::runtime_error &e) {

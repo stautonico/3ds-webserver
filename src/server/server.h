@@ -14,9 +14,12 @@ public:
 
   bool failure() { return m_failure; }
 
+  void stop() {m_running = false;};
+
 private:
   bool m_failure{};
   int m_sockfd{};
+  bool m_running = false;
 
   sockaddr_in m_sockaddr;
 };

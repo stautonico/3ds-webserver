@@ -21,10 +21,10 @@ int main() {
   }
 
   i.run();
-  s.run();
+//  s.run();
 
   #if IS_3DS
-  for (long long i = 0; i < 5000000000LL; i++){};
+//  for (long long i = 0; i < 5000000000LL; i++){};
   #endif
 
   return 0;

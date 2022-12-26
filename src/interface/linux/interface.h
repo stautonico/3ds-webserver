@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../../server/server.h"
+
+
 class Interface {
 public:
   Interface();
@@ -8,4 +11,5 @@ public:
   void run();
 
 private:
+  HTTP::Server m_server;
 };

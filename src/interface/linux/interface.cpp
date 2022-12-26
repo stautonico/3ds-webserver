@@ -12,4 +12,6 @@ Interface::~Interface() {
 
 void Interface::run() {
   printf("This is the linux interface running...\n");
+  m_server.run();
+//  while (true) {}
 }
