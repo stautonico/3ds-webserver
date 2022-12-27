@@ -29,9 +29,7 @@ HTTP::Status::Status(int num, std::string description) {
   }
 }
 
-HTTP::Request::Request() {
-  add_header("Server", "WebServe3DS");
-}
+HTTP::Request::Request() { add_header("Server", "WebServe3DS"); }
 
 bool HTTP::Request::add_header(std::string key, std::string value) {
   if (m_headers.find(key) == m_headers.end()) {
@@ -87,8 +85,8 @@ HTTP::Request HTTP::Request::from_raw(std::string raw_request) {
     throw std::runtime_error("Invalid HTTP request");
   }
 
-  printf("0: %s, 1: %s, 2: %s\n", line.at(0).c_str(), line.at(1).c_str(),
-         line.at(2).c_str());
+  //  printf("0: %s, 1: %s, 2: %s\n", line.at(0).c_str(), line.at(1).c_str(),
+  //         line.at(2).c_str());
 
   Request r;
   r.set_method(method_from_string(line.at(0)));
@@ -108,8 +106,8 @@ std::string HTTP::Request::to_raw() {
   std::ostringstream ss;
 
   ss << std::fixed << std::setprecision(1);
-  ss << "HTTP/" << m_version << " " << m_status.num() << " " << m_status.description()
-     << "\r\n";
+  ss << "HTTP/" << m_version << " " << m_status.num() << " "
+     << m_status.description() << "\r\n";
   for (auto const &x : m_headers) {
     ss << x.first << ": " << x.second << "\r\n";
   }
@@ -120,3 +118,5 @@ std::string HTTP::Request::to_raw() {
 
   return ss.str();
 }
+
+std::string HTTP::Request::method() { return method_to_string(m_method); }

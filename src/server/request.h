@@ -38,6 +38,26 @@ inline Method method_from_string(std::string name) {
   throw std::runtime_error("Invalid method");
 }
 
+inline std::string method_to_string(Method m) {
+  if (m == CONNECT)
+    return "CONNECT";
+  else if (m == DELETE)
+    return "DELETE";
+  else if (m == GET)
+    return "GET";
+  else if (m == HEAD)
+    return "HEAD";
+  else if (m == OPTIONS)
+    return "OPTIONS";
+  else if (m == POST)
+    return "POST";
+  else if (m == PUT)
+    return "PUT";
+  else if (m == TRACE)
+    return "TRACE";
+  throw std::runtime_error("Invalid method");
+}
+
 class Status {
 public:
   Status(){}; // Used for empty Statuses
@@ -133,7 +153,7 @@ public:
   Request();
   ~Request(){};
 
-  void set_method(Method method) {m_method = method;};
+  void set_method(Method method) { m_method = method; };
   void set_version(float version) { m_version = version; }
   void set_body(std::string body) { m_body = body; };
   void set_path(std::string path) { m_path = path; };
@@ -150,6 +170,8 @@ public:
   std::string to_raw();
 
   std::string path() { return m_path; };
+  std::string method();
+  Status status() {return m_status;};
 
 private:
   Method m_method;
