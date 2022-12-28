@@ -1,15 +1,11 @@
 #include "request.h"
 #include "../util/string.h"
 
-#include <algorithm>
-#include <exception>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 HTTP::Status::Status(int num, std::string description) {
   m_status_num = num;

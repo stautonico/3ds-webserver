@@ -2,7 +2,6 @@
 
 #include "../../server/server.h"
 
-
 class Interface {
 public:
   Interface();

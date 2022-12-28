@@ -1,5 +1,6 @@
+#include "./util/string.h"
 #include "server/server.h"
-#include <stdio.h>
+#include <unistd.h>
 
 #if IS_3DS
 #include "interface/3ds/interface.h"
@@ -8,13 +9,20 @@
 #endif
 
 /*
-TODO: Restructure the interface system to use #if conditional rendering instead
-of different classes
-TODO: Serve files from "./3ds-webserver" instead of "/tmp/webfiles"
 TODO: Config file to change options?
  */
 
-int main() {
+int main(int argc, char **argv) {
+  auto current_executable_path = split(argv[0], '/');
+  current_executable_path.erase(current_executable_path.end() - 1);
+
+  std::string current_path;
+
+  for (auto &path : current_executable_path)
+    current_path += path + "/";
+
+  chdir(current_path.c_str());
+
   auto *i = new Interface();
 
   i->run();

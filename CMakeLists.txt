@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(hello_world)
+project(3ds-webserver)
 
 set(EXECUTABLE 3ds-webserver)
 

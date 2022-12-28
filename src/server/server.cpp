@@ -7,15 +7,12 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
-#include <malloc.h>
 #include <netinet/in.h>
 #include <stdexcept>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include <vector>
@@ -120,9 +117,7 @@ HTTP::Server::Server() {
 
   m_failure = false;
 }
-HTTP::Server::~Server() {
-  close(m_sockfd);
-}
+HTTP::Server::~Server() { close(m_sockfd); }
 
 bool HTTP::Server::tick() {
   struct sockaddr_in client;
@@ -130,35 +125,21 @@ bool HTTP::Server::tick() {
 
   uint32_t clientlen = sizeof(client);
 
-  auto addrlen = sizeof(sockaddr);
-
   int connection = accept(m_sockfd, (struct sockaddr *)&client, &clientlen);
   if (connection < 0) {
-//    if (errno != EAGAIN) {
-//      printf("accept: %d %s\n", errno, strerror(errno));
-//      return false;
-//    }
     return true;
   }
 
-  //  printf("Connecting port %d from %s\n", client.sin_port,
-  //         inet_ntoa(client.sin_addr));
   fcntl(connection, F_SETFL, fcntl(connection, F_GETFL, 0) & ~O_NONBLOCK);
 
   char buf[1024];
   memset(&buf, 0, 1024);
-  auto bytesRead = read(connection, buf, 1024);
+  read(connection, buf, 1024);
 
   try {
     Request r;
 
     r = Request::from_raw(std::string(buf));
-
-//    printf("[%s]: path: %s\n", r.method().c_str(), r.path().c_str());
-
-    //    if (r.path() == "/exit") {
-    //      break;
-    //    }
 
     if (r.path() == "/") {
       r.set_path("/index.html");
@@ -180,12 +161,15 @@ bool HTTP::Server::tick() {
 
     r.set_path(path);
 
-    std::filesystem::path f{"/tmp/webfiles" + r.path()};
+    std::filesystem::path f{"./3ds-webserver-files" + r.path()};
     auto normal_path = f.lexically_normal();
     if (!std::filesystem::exists(normal_path)) {
+      printf("%s %s - %d\n", r.method().c_str(), r.path().c_str(),
+             PageNotFoundResponse.status().num());
       std::string message = PageNotFoundResponse.to_raw();
       send(connection, message.c_str(), message.size(), 0);
     }
+
     if (std::filesystem::is_directory(f)) {
       normal_path.append("index.html");
       if (r.path().back() == '/')
@@ -195,7 +179,7 @@ bool HTTP::Server::tick() {
     }
 
     struct stat result;
-    stat(("/tmp/webfiles" + r.path()).c_str(), &result);
+    stat(("./3ds-webserver-files" + r.path()).c_str(), &result);
     auto mod_time = result.st_mtime;
 
     auto modified_header = r.get_header("If-Modified-Since");
@@ -217,7 +201,7 @@ bool HTTP::Server::tick() {
       }
 #endif
     } else {
-      std::ifstream file("/tmp/webfiles" + r.path());
+      std::ifstream file("./3ds-webserver-files" + r.path());
       if (!file.is_open()) {
       } else {
         file.seekg(0, std::ios_base::end); // Seek to end of file.
@@ -247,30 +231,12 @@ bool HTTP::Server::tick() {
         res.add_header("Date", current_datetime.str());
 
         // Add the Content-type header
-        // https://www.freeformatter.com/mime-types-list.html
         auto ext = split(r.path(), '.').back();
 
-        if (ext == "html") {
-          res.add_header("Content-type", "text/html");
-        } else if (ext == "js") {
-          res.add_header("Content-type", "application/javascript");
-        } else if (ext == "woff" || ext == "woff2") {
-          res.add_header("Content-type", "application/x-font-woff");
-        } else if (ext == "css") {
-          res.add_header("Content-type", "text/css");
-        } else if (ext == "png") {
-          res.add_header("Content-type", "image/png");
-        } else if (ext == "eot") {
-          res.add_header("Content-type", "application/vnd.ms-fontobject");
-        } else if (ext == "svg") {
-          res.add_header("Content-type", "image/svg+xml");
-        } else if (ext == "ttf") {
-          res.add_header("Content-type", "application/x-font-ttf");
-        } else {
-          res.add_header("Content-type", "text/plain");
-        }
+        res.add_header("Content-Type", HTTP::ext_to_mime(ext));
 
-        printf("%s %s - %d\n", r.method().c_str(), r.path().c_str(), res.status().num());
+        printf("%s %s - %d\n", r.method().c_str(), r.path().c_str(),
+               res.status().num());
 
         std::string final_res = res.to_raw();
         send(connection, final_res.c_str(), final_res.size(), 0);

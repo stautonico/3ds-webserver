@@ -16,9 +16,7 @@ Interface::Interface() {
   }
 }
 
-Interface::~Interface() {
-  printf("Goodbye linux interface!\n");
-}
+Interface::~Interface() { printf("Goodbye linux interface!\n"); }
 
 void Interface::run() {
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <netinet/in.h>
+#include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <string>
 
 namespace HTTP {
 class Server {
@@ -14,9 +14,9 @@ public:
   bool tick();
 
   bool failure() { return m_failure; }
-  std::string error() {return m_error;};
+  std::string error() { return m_error; };
 
-  void stop() {m_running = false;};
+  void stop() { m_running = false; };
 
 private:
   bool m_failure{};

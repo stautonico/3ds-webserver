@@ -1,9 +1,9 @@
 #include "interface.h"
 
 #include <3ds.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 
 Interface::Interface() {
   gfxInitDefault();
@@ -22,12 +22,9 @@ Interface::Interface() {
   } else {
     printf("Successfully setup web server...\n");
   }
-
 }
 
-Interface::~Interface() {
-  gfxExit();
-}
+Interface::~Interface() { gfxExit(); }
 
 void Interface::run() {
   printf("3ds-webserver demo\n");
@@ -38,7 +35,6 @@ void Interface::run() {
     gspWaitForVBlank();
     gfxSwapBuffers();
     hidScanInput();
-
 
     m_server.tick();
 
