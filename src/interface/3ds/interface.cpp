@@ -41,7 +41,7 @@ void Interface::run() {
     int kDown = hidKeysDown();
     if (kDown & KEY_START) {
       m_server.stop();
-      break; // break in order to return to hbmenu
+      break;
     }
 
     if (kDown & KEY_A) {

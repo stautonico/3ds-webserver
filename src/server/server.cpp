@@ -2,11 +2,13 @@
 
 #include "../util/string.h"
 #include "request.h"
+#include "tls.h"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <malloc.h>
 #include <netinet/in.h>
 #include <stdexcept>
 #include <stdio.h>
@@ -184,7 +186,7 @@ bool HTTP::Server::tick() {
 
     auto modified_header = r.get_header("If-Modified-Since");
     // TODO: Enable later
-    if (!modified_header.empty() || false) {
+    if (!modified_header.empty()) {
       printf("We're checking dates!\n");
       struct tm t = {0};
 #if IS_LINUX
@@ -234,6 +236,8 @@ bool HTTP::Server::tick() {
         auto ext = split(r.path(), '.').back();
 
         res.add_header("Content-Type", HTTP::ext_to_mime(ext));
+
+        res.add_header("Cache-Control", "max-age=3600");
 
         printf("%s %s - %d\n", r.method().c_str(), r.path().c_str(),
                res.status().num());
